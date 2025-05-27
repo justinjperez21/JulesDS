@@ -11,6 +11,17 @@ The MVP will focus on setting up the core sentiment analysis functionality.
 *   **Input:** Text content of a news article.
 *   **Output:** A numerical sentiment score (e.g., ranging from -1.0 for very negative, 0 for neutral, to +1.0 for very positive).
 
+## Current Capabilities (Phase 2)
+
+The project can now perform the following:
+*   **Fetch Recent News:** Utilizes the `pygooglenews` library to fetch up to 1000 recent news article titles along with their publication dates.
+*   **Sentiment Analysis:** Processes the fetched titles through the `SentimentAnalyzer` (using NLTK's VADER) to calculate a sentiment score for each.
+*   **Data Aggregation:** Employs `pandas` to aggregate sentiment scores, calculating the average daily sentiment.
+*   **Visualization:** Generates two plots using `matplotlib`:
+    *   A plot of individual sentiment scores for each news title over time (`individual_sentiment_plot.png`).
+    *   A plot of the aggregated average daily sentiment scores over time (`daily_average_sentiment_plot.png`).
+    These plots are saved as PNG files in the root directory when the analysis script is run.
+
 ## Future Goals (Post-MVP)
 
 *   **Data Acquisition:** Implement methods to gather news articles (e.g., via news APIs, web scraping).
@@ -24,6 +35,9 @@ The MVP will focus on setting up the core sentiment analysis functionality.
 
 *   **Programming Language:** Python
 *   **Core NLP Library:** An NLP library for sentiment analysis (e.g., NLTK with VADER, spaCy, or a Transformer-based model). The specific library for the MVP will be NLTK with VADER due to its simplicity and effectiveness for general sentiment.
+*   **News Fetching:** `pygooglenews`
+*   **Data Handling/Aggregation:** `pandas`
+*   **Plotting:** `matplotlib`
 *   **Testing:** Pytest or Python's built-in `unittest` framework.
 
 ## Modularity and Design
