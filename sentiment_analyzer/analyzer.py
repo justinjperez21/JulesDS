@@ -4,9 +4,7 @@ import nltk
 # This is a common practice for NLTK resources.
 try:
     nltk.data.find('sentiment/vader_lexicon.zip')
-except nltk.downloader.DownloadError:
-    nltk.download('vader_lexicon')
-except LookupError: # Fallback for environments where find might not work as expected before download
+except LookupError:
     nltk.download('vader_lexicon')
 
 

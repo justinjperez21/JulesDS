@@ -1,5 +1,5 @@
 import datetime
-from pygooglenews import GoogleNews
+#from pygooglenews import GoogleNews
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
@@ -14,67 +14,29 @@ from sentiment_analyzer.analyzer import SentimentAnalyzer
 # Initialize GoogleNews client
 # Using 'en' for English, 'US' for United States as a common default
 # These can be parameterized later if needed.
-gn = GoogleNews(lang='en', country='US')
+#gn = GoogleNews(lang='en', country='US')
 
-def fetch_news_titles(target_count=1000): # Aim for 1000 articles
-    """
-    Fetches recent news titles and their publication dates using pygooglenews.
-    Aims to get close to target_count recent articles.
-    Google News RSS typically returns about 100 articles per query.
-    We might need to use broader timeframes or multiple queries for more.
-    For now, let's fetch news from the last few days.
-    """
-    print(f"Fetching recent news titles (aiming for up to {target_count} articles)...")
-    
-    # Search for general news over the last 7 days
-    # The 'when' parameter is crucial. '7d' means last 7 days.
-    # Using a generic search like "news" or relying on top_news might be an option.
-    # Let's try top_news first, then search if needed.
-    
-    all_entries = []
-    
-    try:
-        # top_news() usually gives the most recent general news
-        top = gn.top_news(proxies=None, scraping_bee=None) # No proxy, no scrapingbee
-        if top and 'entries' in top:
-            all_entries.extend(top['entries'])
-            print(f"Fetched {len(top['entries'])} entries from top_news.")
-
-        # To get more entries, we can try searching for broad terms over a period.
-        # Google News search results are typically limited to around 100 per query.
-        # If we need more, we'd have to get creative with search terms or time windows.
-        # For now, let's assume top_news() gives a good set of recent articles.
-        # If len(all_entries) < target_count:
-        #     search_results = gn.search("news", when="7d") # Example broad search
-        #     if search_results and 'entries' in search_results:
-        #         all_entries.extend(search_results['entries'])
-        #     # Need to de-duplicate if combining sources
-
-        # Extract title and published date
-        news_items = []
-        seen_titles = set()
-
-        for entry in all_entries:
-            title = getattr(entry, 'title', None)
-            # feedparser can have 'published_parsed' or 'updated_parsed'
-            # 'published_parsed' is usually what we want for original publication
-            pub_time_struct = getattr(entry, 'published_parsed', None)
-            
-            if title and title not in seen_titles and pub_time_struct:
-                # Convert time.struct_time to datetime object
-                publication_date = datetime.datetime(*pub_time_struct[:6])
-                news_items.append({'date': publication_date, 'title': title})
-                seen_titles.add(title)
-        
-        # Sort by date in descending order (most recent first)
-        news_items.sort(key=lambda x: x['date'], reverse=True)
-        
-        print(f"Processed {len(news_items)} unique news items with dates.")
-        return news_items[:target_count] # Return up to the target count
-
-    except Exception as e:
-        print(f"Error fetching news: {e}")
-        return []
+def fetch_news_titles(target_count=100): # target_count can be ignored or used to slice the sample
+    print("Fetching news titles: Using PREDEFINED SAMPLE DATA.")
+    sample_data = [
+        {'title': 'Positive Outlook for Tech Stocks Next Quarter', 'date': datetime.datetime(2023, 10, 1, 10, 0, 0)},
+        {'title': 'Global Markets Show Signs of Recovery', 'date': datetime.datetime(2023, 10, 1, 12, 30, 0)},
+        {'title': 'New Environmental Policies Announced by Government', 'date': datetime.datetime(2023, 10, 2, 9, 15, 0)},
+        {'title': 'Healthcare Reform Bill Faces Stiff Opposition', 'date': datetime.datetime(2023, 10, 2, 14, 0, 0)},
+        {'title': 'Breakthrough in Cancer Research Reported by Scientists', 'date': datetime.datetime(2023, 10, 3, 11, 0, 0)},
+        {'title': 'Dow Jones Hits Record High Amidst Economic Uncertainty', 'date': datetime.datetime(2023, 10, 3, 16, 45, 0)},
+        {'title': 'Analysts Predict Volatile Week for Cryptocurrency', 'date': datetime.datetime(2023, 10, 4, 8, 30, 0)},
+        {'title': 'Major Movie Studio Announces Sequel to Blockbuster Hit', 'date': datetime.datetime(2023, 10, 4, 13, 20, 0)},
+        {'title': 'Ongoing Peace Talks Show Little Progress', 'date': datetime.datetime(2023, 10, 5, 10, 5, 0)},
+        {'title': 'SpaceX Launches Another Successful Starlink Mission', 'date': datetime.datetime(2023, 10, 5, 18, 0, 0)},
+        {'title': 'Debate Over New Education Curriculum Intensifies', 'date': datetime.datetime(2023, 10, 6, 9, 0, 0)},
+        {'title': 'Tech Giant Unveils Next-Generation Smartphone', 'date': datetime.datetime(2023, 10, 6, 15, 30, 0)},
+        {'title': 'Oil Prices Surge Following International Disputes', 'date': datetime.datetime(2023, 10, 7, 11, 10, 0)},
+        {'title': 'Study Reveals Alarming Decline in Bee Populations', 'date': datetime.datetime(2023, 10, 7, 14, 40, 0)},
+        {'title': 'Sports Team Secures Championship Title in Dramatic Finale', 'date': datetime.datetime(2023, 10, 8, 17, 0, 0)}
+    ]
+    # Return a slice of the data if target_count is smaller than the sample size
+    return sample_data[:target_count]
 
 def plot_individual_sentiments(analyzed_df, filename="individual_sentiment.png"):
     """
