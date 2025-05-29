@@ -4,14 +4,7 @@
 
 This project aims to analyze sentiment in news articles over time to identify trends in the overall emotion of articles by year, month, week, etc.
 
-## Minimal Viable Product (MVP)
-
-The MVP will focus on setting up the core sentiment analysis functionality.
-
-*   **Input:** Text content of a news article.
-*   **Output:** A numerical sentiment score (e.g., ranging from -1.0 for very negative, 0 for neutral, to +1.0 for very positive).
-
-## Current Capabilities (Phase 2)
+## Current Capabilities
 
 The project can now perform the following:
 *   **Fetch Recent News:** Utilizes the `pygooglenews` library to fetch up to 1000 recent news article titles along with their publication dates.
@@ -22,7 +15,7 @@ The project can now perform the following:
     *   A plot of the aggregated average daily sentiment scores over time (`daily_average_sentiment_plot.png`).
     These plots are saved as PNG files in the root directory when the analysis script is run.
 
-## Future Goals (Post-MVP)
+## Future Goals
 
 *   **Data Acquisition:** Implement methods to gather news articles (e.g., via news APIs, web scraping).
 *   **Data Storage:** Choose and integrate a system for storing articles and their sentiment scores (e.g., database, CSV files).
@@ -38,7 +31,7 @@ The project can now perform the following:
 *   **News Fetching:** `pygooglenews`
 *   **Data Handling/Aggregation:** `pandas`
 *   **Plotting:** `matplotlib`
-*   **Testing:** Pytest or Python's built-in `unittest` framework.
+*   **Testing:** Python's built-in `unittest` framework.
 
 ## Modularity and Design
 
