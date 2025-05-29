@@ -1,4 +1,5 @@
 nltk
-pygooglenews
 pandas
 matplotlib
+gnews
+pyarrow
