@@ -2,69 +2,90 @@ import sys # Add sys import
 import os # Add os import
 
 # Add vendor directory to sys.path to use the vendored feedparser
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-VENDOR_DIR = os.path.join(SCRIPT_DIR, 'vendor')
-sys.path.insert(0, VENDOR_DIR)
+# SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+# VENDOR_DIR = os.path.join(SCRIPT_DIR, 'vendor')
+# sys.path.insert(0, VENDOR_DIR) # Ensure this is commented out or removed
 
-import datetime
-from pygooglenews import GoogleNews
+import datetime # Already here, but ensure it's available for gnews test
+from datetime import date # Specifically import date for easy use
+import calendar # For monthrange
+import time # For sleep
+# from pygooglenews import GoogleNews # No longer needed
+from gnews import GNews # Use GNews
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 # We will also need SentimentAnalyzer
 
-import sys
-import os
+import sys # sys import is fine to keep
+import os # os import is fine to keep
 # Add the project root to sys.path to allow importing sentiment_analyzer
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__)) # SCRIPT_DIR needed for PROJECT_ROOT
 PROJECT_ROOT = os.path.abspath(os.path.join(SCRIPT_DIR, '..')) # Use SCRIPT_DIR
-sys.path.insert(1, PROJECT_ROOT) # Insert after vendor dir
+sys.path.insert(1, PROJECT_ROOT) # Insert after vendor dir (if vendor was active, now it's just general project root)
 from sentiment_analyzer.analyzer import SentimentAnalyzer
-from datetime import datetime # Required for parsing date strings
+# from datetime import datetime # Required for parsing date strings, already imported by `import datetime`
 
-# Initialize GoogleNews client
-# Using 'en' for English, 'US' for United States as a common default
-# These can be parameterized later if needed.
-gn = GoogleNews(lang='en', country='US')
+# Initialize GoogleNews client (Old - for pygooglenews) - REMOVED
+# gn = GoogleNews(lang='en', country='US')
 
-def fetch_news_titles(target_count=100):
-    print("Fetching news titles using pygooglenews for 'world news' in the last 7 days...")
+# Old fetch_news_titles function (pygooglenews-based) - REMOVED / REPLACED
+# def fetch_news_titles(query: str, date_from: str, date_to: str): ...
+
+def fetch_news_gnews(query: str, start_date_tuple: tuple, end_date_tuple: tuple) -> list:
+    """
+    Fetches news articles using the gnews library for a given query and date range.
+    """
+    print(f"Fetching news using gnews for '{query}' from {start_date_tuple} to {end_date_tuple}...")
+    gnews_client = GNews(language='en', country='US')
+    gnews_client.start_date = start_date_tuple
+    gnews_client.end_date = end_date_tuple
+    gnews_client.max_results = 100  # Google News RSS typically limits to 100
+
     try:
-        search_results = gn.search('world news', when='7d')
+        raw_articles = gnews_client.get_news(query)
     except Exception as e:
-        print(f"Error calling pygooglenews search: {e}")
+        print(f"Error calling gnews get_news for query '{query}': {e}")
         return []
 
-    if not search_results or 'entries' not in search_results or not search_results['entries']:
-        print("No news entries found by pygooglenews search.")
+    if not raw_articles:
+        print("gnews returned no articles.")
         return []
 
-    articles = []
-    for entry in search_results['entries']:
-        if len(articles) >= target_count:
-            break # Stop if we have reached the target count
-        
+    processed_articles = []
+    articles_processed_count = 0
+    for entry in raw_articles:
         title = entry.get('title')
-        published_date_str = entry.get('published')
-        
+        link = entry.get('url')
+        published_date_str = entry.get('published date')
+        publisher_dict = entry.get('publisher')
+        source_name = publisher_dict.get('title') if isinstance(publisher_dict, dict) else None
+
         if title and published_date_str:
             try:
-                # Example published_date_str: "Mon, 16 Oct 2023 10:00:00 GMT"
-                # This format is directly parseable by strptime with %a, %d %b %Y %H:%M:%S %Z
-                date_obj = datetime.strptime(published_date_str, "%a, %d %b %Y %H:%M:%S %Z")
-                articles.append({'title': title, 'date': date_obj})
+                # Example published_date_str: "Tue, 25 Jan 2022 08:00:00 GMT"
+                date_obj = datetime.datetime.strptime(published_date_str, "%a, %d %b %Y %H:%M:%S %Z")
+                processed_articles.append({
+                    'title': title,
+                    'date': date_obj,  # This is now a datetime object
+                    'link': link,
+                    'source': source_name,
+                    'published_str': published_date_str # Keep original for reference
+                })
+                articles_processed_count +=1
             except ValueError as ve:
                 print(f"Error parsing date '{published_date_str}' for article '{title}': {ve}. Skipping this article.")
-            except Exception as e:
+            except Exception as e: # Catch any other unexpected error during processing an article
                 print(f"An unexpected error occurred while processing article '{title}': {e}. Skipping this article.")
         else:
-            print(f"Missing title or published date for an entry. Entry: {entry}")
+            # Log if essential fields are missing, but don't stop the loop
+            missing_fields = []
+            if not title: missing_fields.append("title")
+            if not published_date_str: missing_fields.append("published_date")
+            print(f"Skipping entry due to missing fields: {', '.join(missing_fields)}. Entry: {entry}")
             
-    if not articles:
-        print("No articles could be processed, even if entries were found.")
-    else:
-        print(f"Successfully fetched and processed {len(articles)} articles.")
-        
-    return articles
+    print(f"Successfully processed {articles_processed_count} articles out of {len(raw_articles)} raw results from gnews.")
+    return processed_articles
 
 def plot_individual_sentiments(analyzed_df, filename="individual_sentiment.png"):
     """
@@ -129,50 +150,90 @@ def plot_aggregated_sentiments(aggregated_df, filename="aggregated_sentiment.png
     print(f"Aggregated sentiment plot saved to {filename}")
 
 if __name__ == "__main__":
-    print("Starting news fetching and analysis process...")
+    # Removed the gnews test block and sys.exit()
+
+    print("Starting news fetching and analysis process for 2018-2024 using gnews...")
     try:
-        # Fetch news (aiming for 100 articles for now)
-        # We'll increase this to 1000 later as requested by the user.
-        fetched_articles = fetch_news_titles(target_count=1000)
+        start_year = 2018
+        end_year = 2024 # Inclusive
+        news_query = "world news" 
         
-        analyzed_articles = []
-        if fetched_articles:
-            print(f"\nSuccessfully fetched {len(fetched_articles)} articles.")
-            
+        all_fetched_articles = [] 
+        
+        for year in range(start_year, end_year + 1):
+            for month in range(1, 13):
+                # Create date tuples for gnews
+                start_date_tuple = (year, month, 1)
+                # Determine last day of the month
+                last_day_val = calendar.monthrange(year, month)[1]
+                end_date_tuple = (year, month, last_day_val)
+                
+                # Skip future months/years
+                current_datetime = datetime.datetime.now() # Use datetime.datetime.now() for comparison
+                if year > current_datetime.year or \
+                   (year == current_datetime.year and month > current_datetime.month):
+                    print(f"Skipping future period: {year}-{month:02d}")
+                    if year > current_datetime.year: # If year is future, break from month loop to go to next year check or end
+                        break 
+                    continue # If current year but future month, continue to next month if any in current year
+
+                # Call the new gnews fetching function
+                # Note: The print message about date range is now inside fetch_news_gnews
+                fetched_articles_for_month = fetch_news_gnews(
+                    query=news_query, 
+                    start_date_tuple=start_date_tuple, 
+                    end_date_tuple=end_date_tuple
+                )
+                
+                if fetched_articles_for_month: # fetch_news_gnews returns a list
+                    all_fetched_articles.extend(fetched_articles_for_month)
+                    print(f"Fetched {len(fetched_articles_for_month)} articles for {year}-{month:02d}. Total articles so far: {len(all_fetched_articles)}.")
+                else:
+                    print(f"No articles found for {year}-{month:02d}.")
+                
+                time.sleep(1) # Respectful delay
+
+        print(f"\nFinished fetching all news. Total articles collected: {len(all_fetched_articles)}.")
+
+        analyzed_articles_output = [] # Renamed to avoid confusion with original analyzed_articles
+        if all_fetched_articles:
             # Initialize Sentiment Analyzer
             analyzer = SentimentAnalyzer()
             
-            print("\nAnalyzing sentiment for fetched articles...")
-            for i, article in enumerate(fetched_articles):
+            print("\nAnalyzing sentiment for all fetched articles...")
+            for i, article in enumerate(all_fetched_articles):
                 try:
                     sentiment_score = analyzer.analyze_sentiment(article['title'])
-                    analyzed_articles.append({
-                        'date': article['date'],
-                        'title': article['title'],
-                        'sentiment': sentiment_score
-                    })
-                    if (i + 1) % 10 == 0: # Print progress every 10 articles
-                        print(f"Analyzed {i+1}/{len(fetched_articles)} articles...")
+                    # Append all original article info along with sentiment
+                    article_data_with_sentiment = article.copy() # Start with original article data
+                    article_data_with_sentiment['sentiment'] = sentiment_score
+                    analyzed_articles_output.append(article_data_with_sentiment)
+                    
+                    if (i + 1) % 50 == 0: # Print progress every 50 articles
+                        print(f"Analyzed {i+1}/{len(all_fetched_articles)} articles...")
                 except Exception as e:
-                    print(f"Error analyzing article '{article['title']}': {e}")
+                    print(f"Error analyzing article titled '{article.get('title', 'N/A')}': {e}")
             
-            print(f"\nFinished sentiment analysis. Processed {len(analyzed_articles)} articles.")
+            print(f"\nFinished sentiment analysis. Processed {len(analyzed_articles_output)} articles for sentiment.")
             
-            if not analyzed_articles:
+            if not analyzed_articles_output:
                 print("No articles were successfully analyzed. Skipping data processing and plotting.")
             else:
-                print("\nSample of analyzed articles:")
-                for i, article_data in enumerate(analyzed_articles[:5]): # Print first 5
-                    print(f" - Date: {article_data['date']}, Title: \"{article_data['title'][:50]}...\", Sentiment: {article_data['sentiment']:.4f}")
+                print("\nSample of analyzed articles (now includes sentiment):")
+                for i, article_data in enumerate(analyzed_articles_output[:5]): # Print first 5
+                    print(f" - Date: {article_data.get('date')}, Title: \"{article_data.get('title', 'N/A')[:50]}...\", Source: {article_data.get('source', 'N/A')}, Sentiment: {article_data.get('sentiment', float('nan')):.4f}")
 
                 # Convert to Pandas DataFrame for easier manipulation
-                df = pd.DataFrame(analyzed_articles)
+                # This df will contain all articles from 2018-2024 with their sentiment scores
+                df = pd.DataFrame(analyzed_articles_output)
 
                 aggregated_sentiments = None
                 if not df.empty:
                     print("\nAggregating sentiment scores by day...")
-                    # Ensure 'date' column is in datetime format
-                    df['date_dt'] = pd.to_datetime(df['date'])
+                    # Ensure 'date' column is in datetime format (it should be from fetch_news_titles)
+                    # If 'date' is already datetime objects, this is fine. If it's strings, conversion is needed.
+                    # Assuming 'date' in analyzed_articles_output is already a datetime object from strptime.
+                    df['date_dt'] = pd.to_datetime(df['date']) # Ensure it's pandas datetime for dt accessor
                     
                     # Extract just the date part for daily aggregation
                     df['day'] = df['date_dt'].dt.date 
@@ -189,27 +250,53 @@ if __name__ == "__main__":
                     print("\nSample of daily aggregated sentiment scores:")
                     print(aggregated_sentiments.head())
 
+                    # --- Save data to yearly Parquet files ---
+                    print("\nSaving data to yearly Parquet files...")
+                    output_dir = "fetched_news_data"
+                    os.makedirs(output_dir, exist_ok=True)
+
+                    # df['date'] should already be datetime objects from fetch_news_titles
+                    # pd.to_datetime might be redundant if 'date' is already datetime64[ns]
+                    # but ensures it if 'date' was, for example, a list of mixed types or pure Python datetimes
+                    df['date'] = pd.to_datetime(df['date'])
+
+                    for year_to_save in range(start_year, end_year + 1):
+                        # Filter for the current year. Using .copy() is good practice.
+                        df_year = df[df['date'].dt.year == year_to_save].copy()
+                        
+                        if not df_year.empty:
+                            file_path = os.path.join(output_dir, f"news_{year_to_save}.parquet")
+                            try:
+                                df_year.to_parquet(file_path, index=False)
+                                print(f"Successfully saved {len(df_year)} articles for {year_to_save} to {file_path}")
+                            except Exception as e:
+                                print(f"Error saving Parquet file for {year_to_save}: {e}")
+                        else:
+                            print(f"No articles found for {year_to_save} to save.")
+                    # --- End of saving data ---
+
                     # Call plotting functions
-                    if not df.empty: # df contains individual analyzed articles
-                         plot_individual_sentiments(df, filename="individual_sentiment_plot.png")
+                    # Ensure plot_individual_sentiments uses the correct column if 'date_dt' is already datetime
+                    # The function expects 'date_dt' and 'sentiment'
+                    plot_individual_sentiments(df, filename="individual_sentiment_plot.png")
                     
                     if aggregated_sentiments is not None and not aggregated_sentiments.empty:
                          plot_aggregated_sentiments(aggregated_sentiments, filename="daily_average_sentiment_plot.png")
-                    elif not df.empty : # If aggregation resulted in empty but individual data was there
-                         print("Aggregated sentiment data was empty, skipping aggregated plot.")
-                else: # This else corresponds to `if not df.empty` which implicitly means analyzed_articles was not empty but df creation failed or df is empty.
-                     print("DataFrame could not be created or is empty. No data to aggregate or plot.")
-        else: # This 'else' corresponds to 'if fetched_articles:'
-            print("No articles were fetched. Skipping analysis and plotting.")
+                    else: # This covers aggregated_sentiments being None or empty
+                         print("Aggregated sentiment data was empty or None, skipping aggregated plot.")
+                else: # This else corresponds to `if not df.empty` (after creating df from analyzed_articles_output)
+                     print("DataFrame `df` (from analyzed_articles_output) is empty. No data to aggregate, save, or plot.")
+        else: # This 'else' corresponds to 'if all_fetched_articles:'
+            print("No articles were fetched for the entire period 2018-2024. Skipping analysis, saving, and plotting.")
         
         print("\nProcess complete.")
-        if fetched_articles and analyzed_articles:
-            print("Plots have been generated (if data was sufficient).")
+        if all_fetched_articles and analyzed_articles_output and not df.empty:
+            print("Plots have been generated (if data was sufficient) and data saved.")
         else:
-            print("No plots were generated due to lack of data.")
+            print("No plots were generated and no data saved due to lack of data or issues in analysis/DataFrame creation.")
 
     except Exception as e:
-        print(f"\nAn unexpected error occurred during the script execution: {e}")
+        print(f"\nAn critical error occurred during the script execution: {e}")
         print("The process was halted due to this error.")
         # Optionally, re-raise the exception if you want to see the full traceback for debugging
         # raise 
