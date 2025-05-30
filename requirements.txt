@@ -1,5 +1,5 @@
+gnews
+matplotlib
 nltk
 pandas
-matplotlib
-gnews
 pyarrow
