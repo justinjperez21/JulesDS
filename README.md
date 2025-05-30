@@ -11,7 +11,7 @@ The project performs the following:
 *   **Historical News Fetching (`scripts/fetch_and_analyze.py`):**
     *   Utilizes the `gnews` library to fetch historical news articles (title, publication date, source, link).
     *   Accepts `start_date` and `end_date` command-line arguments to define the fetching period.
-    *   To gather data over long periods (e.g., 2018-2024), it's typically run in chunks (e.g., yearly or monthly).
+    *   To gather data over long periods (e.g., 2018-2024), it is run year-by-year. For example: `python scripts/fetch_and_analyze.py 2018-01-01 2018-12-31`, then `python scripts/fetch_and_analyze.py 2019-01-01 2019-12-31`, and so on, up to 2024.
     *   Performs sentiment analysis on fetched titles using `SentimentAnalyzer` (NLTK's VADER).
     *   Saves the processed data (including title, formatted date, link, source, and sentiment score) into CSV files.
     *   These CSV files are stored in the `data/` directory, with filenames like `news_STARTDATE_ENDDATE.csv` (e.g., `news_20220101_20221231.csv`).
@@ -37,14 +37,17 @@ The project performs the following:
     ```bash
     pip install -r requirements.txt
     ```
-    This installs `gnews`, `pandas`, `matplotlib`, `nltk`, and `pyarrow`. NLTK's VADER lexicon will be downloaded on first use by `SentimentAnalyzer` if not present.
+    This installs `gnews`, `pandas`, `matplotlib`, and `nltk`. NLTK's VADER lexicon will be downloaded on first use by `SentimentAnalyzer` if not present.
 
 2.  **Fetch News Data:**
-    Run `scripts/fetch_and_analyze.py` with desired start and end dates. For example, to fetch data for the year 2022:
+    Run `scripts/fetch_and_analyze.py` for each year from 2018 to 2024 to populate the `data/` directory. Execute the command for each year individually:
     ```bash
-    python scripts/fetch_and_analyze.py 2022-01-01 2022-12-31
+    python scripts/fetch_and_analyze.py 2018-01-01 2018-12-31
+    python scripts/fetch_and_analyze.py 2019-01-01 2019-12-31
+    # ... and so on for 2020, 2021, 2022, 2023 ...
+    python scripts/fetch_and_analyze.py 2024-01-01 2024-12-31
     ```
-    Repeat this for all desired periods (e.g., for each year from 2018 to 2024) to populate the `data/` directory. Be mindful of potential API rate limits; the script includes a small delay, but running many fetches back-to-back might require additional pauses.
+    Be mindful of potential API rate limits; the script includes a small delay, but running many fetches back-to-back might require additional pauses.
 
 3.  **Generate Sentiment Plots:**
     Once you have fetched the data, run `plot_sentiments.py` from the project root directory:
