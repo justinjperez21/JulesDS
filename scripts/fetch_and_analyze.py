@@ -9,7 +9,7 @@ import os # Add os import
 import datetime
 # from datetime import date # No longer needed directly, use datetime.date
 import argparse # For command-line arguments
-# import calendar # No longer needed
+import calendar # Will be needed for monthrange
 import time
 from gnews import GNews
 import pandas as pd
@@ -114,20 +114,60 @@ if __name__ == "__main__":
     
     print(f"Starting news fetching and analysis for query '{news_query}' from {args.start_date} to {args.end_date}.")
     
-    # Fetch news for the entire specified range
-    all_fetched_articles = fetch_news_gnews(
-        query=news_query,
-        start_date_obj=start_date_dt_obj,
-        end_date_obj=end_date_dt_obj
-    )
+    all_fetched_articles = []
+    current_date = start_date_dt_obj
+
+    while current_date <= end_date_dt_obj:
+        year = current_date.year
+        month = current_date.month
+
+        # Determine the first day of the current month
+        first_day_of_month = datetime.date(year, month, 1)
+
+        # Determine the last day of the current month
+        # Ensure the last day does not exceed the overall end_date_dt_obj
+        _, num_days_in_month = calendar.monthrange(year, month)
+        last_day_of_month_dt = datetime.date(year, month, num_days_in_month)
+
+        # Adjust month_start_date and month_end_date to be within the overall start_date_dt_obj and end_date_dt_obj
+        month_start_date = max(first_day_of_month, start_date_dt_obj)
+        month_end_date = min(last_day_of_month_dt, end_date_dt_obj)
+
+        if month_start_date > month_end_date: # Should not happen if current_date logic is correct, but as a safeguard
+            # Move to the next month
+            if month == 12:
+                current_date = datetime.date(year + 1, 1, 1)
+            else:
+                current_date = datetime.date(year, month + 1, 1)
+            continue
+
+        print(f"\nFetching for month: {month_start_date.strftime('%Y-%m')} (from {month_start_date.strftime('%Y-%m-%d')} to {month_end_date.strftime('%Y-%m-%d')})")
+
+        monthly_articles = fetch_news_gnews(
+            query=news_query,
+            start_date_obj=month_start_date,
+            end_date_obj=month_end_date
+        )
+
+        if monthly_articles:
+            all_fetched_articles.extend(monthly_articles)
+            print(f"Fetched {len(monthly_articles)} articles for {month_start_date.strftime('%Y-%m')}.")
+        else:
+            print(f"No articles found for {month_start_date.strftime('%Y-%m')}.")
+
+        # Move to the first day of the next month
+        if month == 12:
+            current_date = datetime.date(year + 1, 1, 1)
+        else:
+            current_date = datetime.date(year, month + 1, 1)
 
     if not all_fetched_articles:
-        print(f"No articles found for the period {args.start_date} to {args.end_date}. Exiting.")
-        sys.exit(0) # Graceful exit as per requirement
+        print(f"No articles found for the overall period {args.start_date} to {args.end_date} after monthly fetching. Exiting.")
+        sys.exit(0)
 
-    print(f"\nFetched {len(all_fetched_articles)} articles for the period {args.start_date} to {args.end_date}.")
+    print(f"\nTotal fetched {len(all_fetched_articles)} articles for the period {args.start_date} to {args.end_date}.")
 
-    analyzed_articles_for_csv = [] 
+    analyzed_articles_for_csv = []
     if all_fetched_articles:
         analyzer = SentimentAnalyzer()
         print(f"\nAnalyzing {len(all_fetched_articles)} articles...")
