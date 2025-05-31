@@ -4,6 +4,28 @@
 
 This project aims to analyze sentiment in news articles over time to identify trends in the overall emotion of articles by year, month, week, etc., by fetching and processing historical news data.
 
+## Project Structure
+
+- `sentiment_analyzer/`: Contains the core sentiment analysis logic.
+  - `analyzer.py`: Defines the `SentimentAnalyzer` class using NLTK's VADER.
+- `scripts/`: Contains scripts for data processing.
+  - `fetch_and_analyze.py`: Fetches news articles, performs sentiment analysis, and saves results to CSV files in the `data/` directory.
+- `plot_sentiments.py`: Generates various sentiment trend plots from the data in `data/` and saves them as PNG files in the root directory.
+- `data/`: Stores CSV files with fetched news data and sentiment scores. (This directory is ignored by git as specified in `.gitignore`)
+- `tests/`: Contains unit tests for the project.
+- `requirements.txt`: Lists project dependencies.
+- `README.md`: This file, providing an overview of the project.
+- `.gitignore`: Specifies intentionally untracked files that Git should ignore.
+
+## Methodology
+
+The project follows a multi-step process to analyze news sentiment:
+
+1.  **Data Fetching**: The `scripts/fetch_and_analyze.py` script is used to gather news articles. It takes a start and end date as input and queries the GNews API for relevant articles within that timeframe. The script iterates monthly within the given range to ensure comprehensive data collection.
+2.  **Sentiment Analysis**: For each fetched article, the title is processed by the `SentimentAnalyzer` class (located in `sentiment_analyzer/analyzer.py`). This analyzer uses NLTK's VADER (Valence Aware Dictionary and sEntiment Reasoner), a lexicon and rule-based sentiment analysis tool specifically attuned to sentiments expressed in social media, and generally well-suited for news headlines as well. It returns a compound sentiment score ranging from -1 (most negative) to +1 (most positive).
+3.  **Data Storage**: The processed articles, including their titles, publication dates, sources, web links, and sentiment scores, are saved into CSV files. These files are stored in the `data/` directory, with filenames indicating the date range of the contained news (e.g., `news_20230101_20231231.csv`).
+4.  **Data Visualization**: The `plot_sentiments.py` script reads all CSV files from the `data/` directory. It then aggregates the sentiment scores (calculating mean sentiment) across different timeframes: daily, weekly, monthly, and yearly. Using `matplotlib`, it generates line plots for these aggregated trends and a scatter plot for individual article sentiments over the entire period. These plots are saved as PNG images in the project's root directory (e.g., `sentiment_monthly.png`).
+
 ## Current Capabilities
 
 The project performs the following:
@@ -21,14 +43,13 @@ The project performs the following:
 
 *   **Sentiment Visualization (`plot_sentiments.py`):**
     *   Reads all CSV data from the `data/` directory.
-    *   Aggregates sentiment scores daily, weekly, monthly, and yearly.
-    *   Generates several plots using `matplotlib` to visualize sentiment trends.
-    *   The output plots are saved as PNG files in the root directory:
-        *   `sentiment_overall_individual.png`: Scatter plot of all individual article sentiments.
-        *   `sentiment_daily.png`: Line plot of daily average sentiment.
-        *   `sentiment_weekly.png`: Line plot of weekly average sentiment.
-        *   `sentiment_monthly.png`: Line plot of monthly average sentiment.
-        *   `sentiment_yearly.png`: Line plot of yearly average sentiment.
+    *   Aggregates sentiment scores (mean) daily, weekly, monthly, and yearly.
+    *   Generates and saves the following plots as PNG files in the root directory:
+        *   `sentiment_overall_individual.png`: A scatter plot showing the sentiment score of every individual news article over the entire date range. This helps visualize the distribution and density of sentiments.
+        *   `sentiment_daily.png`: A line plot depicting the average sentiment score calculated on a daily basis. This plot helps identify short-term fluctuations.
+        *   `sentiment_weekly.png`: A line plot showing the weekly average sentiment score, smoothing out daily variations and highlighting weekly trends.
+        *   `sentiment_monthly.png`: A line plot of the monthly average sentiment, providing a clearer view of medium-term sentiment shifts.
+        *   `sentiment_yearly.png`: A line plot illustrating the yearly average sentiment, useful for observing long-term trends and patterns.
 
 ## How to Run
 
@@ -47,14 +68,14 @@ The project performs the following:
     # ... and so on for 2020, 2021, 2022, 2023 ...
     python scripts/fetch_and_analyze.py 2024-01-01 2024-12-31
     ```
-    Be mindful of potential API rate limits; the script includes a small delay, but running many fetches back-to-back might require additional pauses.
+    Be mindful of potential API rate limits; the script includes a small delay, but running many fetches back-to-back might require additional pauses. Data will be saved in the `data/` directory.
 
 3.  **Generate Sentiment Plots:**
     Once you have fetched the data, run `plot_sentiments.py` from the project root directory:
     ```bash
     python plot_sentiments.py
     ```
-    This will read the CSV files from `data/` and generate the sentiment trend plots in the root directory.
+    This will read the CSV files from `data/` and generate the sentiment trend plots, saving them as PNG files in the root directory.
 
 ## Future Goals
 
@@ -65,20 +86,6 @@ The project performs the following:
 *   **Interactive Visualization:** Develop interactive dashboards (e.g., using Dash/Plotly or Streamlit) to allow users to explore sentiment trends and filter data dynamically.
 *   **Scalability and Performance:** Optimize the data processing pipeline for handling larger datasets and improve performance of fetching and analysis.
 *   **Configuration:** While `fetch_and_analyze.py` now accepts date arguments, further configuration options (e.g., news queries, output directories via a config file) could be explored.
-
-## Initial Tech Stack
-
-*   **Programming Language:** Python
-*   **Core NLP Library:** NLTK with VADER for sentiment analysis.
-*   **News Fetching:** `gnews`
-*   **Data Handling/Aggregation:** `pandas`
-*   **Data Storage (Filesystem):** CSV files
-*   **Plotting:** `matplotlib`
-*   **Testing:** Python's built-in `unittest` framework.
-
-## Modularity and Design
-
-The project will be developed with a strong emphasis on Object-Oriented Programming (OOP) principles to ensure modularity and maintainability. Key components such as data input, sentiment processing, data storage, and analysis will be designed as distinct modules or classes.
 
 ## Contribution Guidelines
 
