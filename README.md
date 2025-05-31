@@ -1,5 +1,9 @@
 # News Sentiment Analyzer
 
+# Note: Overall thoughts(Human written)
+
+Overall, Google Jules is an amazing tool. The model it uses(I assume to be a fine-tuned version of Gemini 2.5 Pro) is very capable and pleasant to work with. It makes good suggestions and is capable, moreso than other models in agent frameworks that I've used, at solving problems that arise on its own. It usually required minimal if any feedback/guidance from me, though this is a somewhat simple project so perhaps this does not hold true in larger, more complex codebases. The only problem I would cite is some issues with inconsistency in commiting to github and performance of the website. It was necessary sometimes to have it redo work purely because it was unable to commit to github. Since I worked on this it seems to be more consistent(as well as the daily task limit being raised from 5 to 60, which is extremely generous of Google). I very much like having this available on website, and I even used this from my phone in some cases while I did not have access to my computer, which opens up many opportunities. I very much enjoyed my time using Google Jules for this project, and I think I will use it in the future for other projects.
+
 ## Project Goal
 
 This project aims to analyze sentiment in news articles over time to identify trends in the overall emotion of articles by year, month, week, etc., by fetching and processing historical news data.
@@ -86,11 +90,3 @@ The project performs the following:
 *   **Interactive Visualization:** Develop interactive dashboards (e.g., using Dash/Plotly or Streamlit) to allow users to explore sentiment trends and filter data dynamically.
 *   **Scalability and Performance:** Optimize the data processing pipeline for handling larger datasets and improve performance of fetching and analysis.
 *   **Configuration:** While `fetch_and_analyze.py` now accepts date arguments, further configuration options (e.g., news queries, output directories via a config file) could be explored.
-
-## Contribution Guidelines
-
-(Placeholder for contribution guidelines - to be added later.)
-
-## License
-
-(Placeholder for license - likely MIT License, to be confirmed and added later.)
